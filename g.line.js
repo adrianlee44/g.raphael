@@ -100,6 +100,9 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
     var lines = this.set(),
         symbols = this.set(),
         line;
+    if (opts.vertLine){
+    	// TODO: Add vertical lines
+    }
     for (i = 0, ii = valuesy.length; i < ii; i++) {
         if (!opts.nostroke) {
             lines.push(line = this.path().attr({
@@ -204,6 +207,29 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
         }
         !f && (dots = cvrs);
     }
+    if (opts.legend){
+    	var X = x + width + width/10, Y = y + height/2, H = Y + 10;
+    	labels = opts.legend || [];
+    	dir = (opts.legendpos && opts.legendpos.toLowerCase && opts.legendpos.toLowerCase()) || "east";
+    	mark = this.g.markers[opts.legendmark && opts.legendmark.toLowerCase()] || "disc";
+    	chart.labels = this.set();
+    	for (var i = 0; i < valuesy.length; i++){
+    		var clr = lines[i].attr("stroke");
+    		chart.labels.push(this.set());
+    		chart.labels[i].push(this.g[mark](X+5, H, 5).attr({fill: clr, stroke:"none"}));
+    		chart.labels[i].push(txt = this.text(X+20, H, labels[i] || values[i]).attr(this.g.txtattr).attr({fill: opts.legendcolor || "#000", "text-anchor":"start"}));
+    		H += txt.getBBox().height * 1.2;
+    	}
+    	var bb = chart.labels.getBBox(),
+    	tr = {
+    		east: [0, -bb.height/2],
+            west: [-bb.width - 2 * width - 20, -bb.height / 2],
+            north: [-width - bb.width / 2, -height - bb.height - 10],
+            south: [-width - bb.width / 2, height + 10]
+        }[dir];
+    	chart.labels.translate.apply(chart.labels, tr);
+    	chart.push(chart.labels);
+    }
     chart.push(lines, shades, symbols, axis, columns, dots);
     chart.lines = lines;
     chart.shades = shades;
@@ -214,6 +240,7 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
         columns.mouseover(fin).mouseout(fout);
         return this;
     };
+    
     chart.clickColumn = function (f) {
         !columns && createColumns();
         columns.click(f);
