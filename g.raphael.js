@@ -379,8 +379,9 @@
         f = round((from - (i > 0 ? 0 : .5)) * Math.pow(10, i)) / Math.pow(10, i);
         return {from: f, to: t, power: i};
     };
-    Raphael.fn.g.axis = function (x, y, length, from, to, steps, orientation, labels, type, dashsize) {
+    Raphael.fn.g.axis = function (x, y, length, from, to, steps, orientation, labels, axislabels, type, dashsize) {
         dashsize = dashsize == null ? 2 : dashsize;
+        axislabels = axislabels || "";
         type = type || "t";
         steps = steps || 10;
         var path = type == "|" || type == " " ? ["M", x + .5, y, "l", 0, .001] : orientation == 1 || orientation == 3 ? ["M", x + .5, y, "l", 0, -length] : ["M", x, y + .5, "l", length, 0],
@@ -407,6 +408,7 @@
                 type != "-" && type != " " && (path = path.concat(["M", x - (type == "+" || type == "|" ? dashsize : !(orientation - 1) * dashsize * 2), y - length + .5, "l", dashsize * 2 + 1, 0]));
                 text.push(this.text(x + addon, y - length, (labels && labels[j]) || (Math.round(label) == label ? label : +label.toFixed(rnd))).attr(this.g.txtattr).attr({"text-anchor": orientation - 1 ? "start" : "end"}));
             }
+            text.push(this.text(x-10, y-length-15, axislabels)).attr(this.g.txtattr);
         } else {
             label = f;
             rnd = (i > 0) * i;
@@ -431,6 +433,7 @@
                 type != "-" && type != " " && (path = path.concat(["M", x + length + .5, y - (type == "+" ? dashsize : !!orientation * dashsize * 2), "l", 0, dashsize * 2 + 1]));
                 text.push(this.text(x + length, y + addon, (labels && labels[j]) || (Math.round(label) == label ? label : +label.toFixed(rnd))).attr(this.g.txtattr));
             }
+            text.push(this.text(x+length/2,y+25, axislabels)).attr(this.g.txtattr);
         }
         var res = this.path(path);
         res.text = text;
