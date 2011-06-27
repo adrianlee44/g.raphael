@@ -294,6 +294,19 @@
             r = mmin(20, bb.width + 10, bb.height + 10) / 2;
         return this.rect(bb.x - r / 2, bb.y - r / 2, bb.width + r, bb.height + r, r).attr({stroke: "none", fill: "#000"}).insertBefore(set.node ? set : set[0]);
     };
+    Raphael.fn.g.drawGrid = function (x, y, w, h, wv, hv, color) {
+        color = color || "#000";
+        var path = ["M", Math.round(x) + .5, Math.round(y) + .5, "L", Math.round(x + w) + .5, Math.round(y) + .5, Math.round(x + w) + .5, Math.round(y + h) + .5, Math.round(x) + .5, Math.round(y + h) + .5, Math.round(x) + .5, Math.round(y) + .5],
+            rowHeight = h / hv,
+            columnWidth = w / wv;
+        for (var i = 1; i < hv; i++) {
+            path = path.concat(["M", Math.round(x) + .5, Math.round(y + i * rowHeight) + .5, "H", Math.round(x + w) + .5]);
+        }
+        for (i = 1; i < wv; i++) {
+            path = path.concat(["M", Math.round(x + i * columnWidth) + .5, Math.round(y) + .5, "V", Math.round(y + h) + .5]);
+        }
+        return this.path(path.join(",")).attr({stroke: color});
+    };
     Raphael.fn.g.drop = function (x, y, text, size, angle) {
         size = size || 30;
         angle = angle || 0;
@@ -381,7 +394,7 @@
     };
     Raphael.fn.g.axis = function (x, y, length, from, to, steps, orientation, labels, axislabels, type, dashsize) {
         dashsize = dashsize == null ? 2 : dashsize;
-        axislabels = axislabels || "";
+        axislabels = axislabels || " ";
         type = type || "t";
         steps = steps || 10;
         var path = type == "|" || type == " " ? ["M", x + .5, y, "l", 0, .001] : orientation == 1 || orientation == 3 ? ["M", x + .5, y, "l", 0, -length] : ["M", x, y + .5, "l", length, 0],
@@ -408,7 +421,7 @@
                 type != "-" && type != " " && (path = path.concat(["M", x - (type == "+" || type == "|" ? dashsize : !(orientation - 1) * dashsize * 2), y - length + .5, "l", dashsize * 2 + 1, 0]));
                 text.push(this.text(x + addon, y - length, (labels && labels[j]) || (Math.round(label) == label ? label : +label.toFixed(rnd))).attr(this.g.txtattr).attr({"text-anchor": orientation - 1 ? "start" : "end"}));
             }
-            text.push(this.text(x-10, y-length-15, axislabels)).attr(this.g.txtattr);
+            text.push(this.text(x-5, y-length-15, axislabels)).attr(this.g.txtattr);
         } else {
             label = f;
             rnd = (i > 0) * i;
@@ -433,7 +446,7 @@
                 type != "-" && type != " " && (path = path.concat(["M", x + length + .5, y - (type == "+" ? dashsize : !!orientation * dashsize * 2), "l", 0, dashsize * 2 + 1]));
                 text.push(this.text(x + length, y + addon, (labels && labels[j]) || (Math.round(label) == label ? label : +label.toFixed(rnd))).attr(this.g.txtattr));
             }
-            text.push(this.text(x+length/2,y+25, axislabels)).attr(this.g.txtattr);
+            text.push(this.text(x+length/2,y+35, axislabels)).attr(this.g.txtattr);
         }
         var res = this.path(path);
         res.text = text;

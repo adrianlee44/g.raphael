@@ -87,8 +87,9 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
         }
     }
 
-    chart.hover = function (fin, fout) {
+    chart.hover = function (fin, fout, opts) {
         fout = fout || function () {};
+        labelOpt = opts.hoverLabel || false;
         var that = this;
         for (var i = 0; i < len; i++) {
             (function (sector, cover, j) {
@@ -110,6 +111,13 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
                 }).mouseout(function () {
                     fout.call(o);
                 });
+                if (labelOpt && that.labels[j]){
+                	that.labels[j].mouseover(function (){
+                		fin.call(o);
+                	}).mouseout(function () {
+                		fout.call(o);
+                	});
+                }
             })(series[i], covers[i], i);
         }
         return this;
