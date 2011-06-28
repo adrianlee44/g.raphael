@@ -89,6 +89,7 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
 
     chart.hover = function (fin, fout, opts) {
         fout = fout || function () {};
+        opts = opts || {};
         labelOpt = opts.hoverLabel || false;
         var that = this;
         for (var i = 0; i < len; i++) {
@@ -111,7 +112,7 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
                 }).mouseout(function () {
                     fout.call(o);
                 });
-                if (labelOpt && that.labels[j]){
+                if (labelOpt){
                 	that.labels[j].mouseover(function (){
                 		fin.call(o);
                 	}).mouseout(function () {

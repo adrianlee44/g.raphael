@@ -99,6 +99,7 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
     }
     var lines = this.set(),
         symbols = this.set(),
+        vertLine = this.set(),
         line;
     if (opts.vertLine){
     	// TODO: Add vertical lines
@@ -213,7 +214,7 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
     	dir = (opts.legendpos && opts.legendpos.toLowerCase && opts.legendpos.toLowerCase()) || "east";
     	mark = this.g.markers[opts.legendmark && opts.legendmark.toLowerCase()] || "disc";
     	chart.labels = this.set();
-    	for (var i = 0; i < valuesy.length; i++){
+    	for (var i = 0; i < lines.length; i++){
     		var clr = lines[i].attr("stroke");
     		chart.labels.push(this.set());
     		chart.labels[i].push(this.g[mark](X+5, H, 5).attr({fill: clr, stroke:"none"}));
@@ -265,6 +266,23 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
         !dots && createDots();
         dots.mouseover(fin).mouseout(fout);
         return this;
+    };
+    chart.hoverLabel = function (fin, fout) {
+    	var that = this;
+    	for (var i = 0; i < lines.length; i++){
+    		(function(line, j){
+    			var o = {
+    				line : line,
+    				label: that.labels && that.labels[j]
+    			};
+    			that.labels[j].mouseover(function(){
+    				fin.call(o);
+    			}).mouseout(function(){
+    				fout.call(o);
+    			});
+    		})(lines[i], i);
+    	}
+    	return this;
     };
     chart.click = function (f) {
         !dots && createDots();
