@@ -5,51 +5,7 @@
  * Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license.
  */
 Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) {
-    function shrink(values, dim) {
-        var k = values.length / dim,
-            j = 0,
-            l = k,
-            sum = 0,
-            res = [];
-        while (j < values.length) {
-            l--;
-            if (l < 0) {
-                sum += values[j] * (1 + l);
-                res.push(sum / k);
-                sum = values[j++] * -l;
-                l += k;
-            } else {
-                sum += values[j++];
-            }
-        }
-        return res;
-    }
-    function getAnchors(p1x, p1y, p2x, p2y, p3x, p3y) {
-        var l1 = (p2x - p1x) / 2,
-            l2 = (p3x - p2x) / 2,
-            a = Math.atan((p2x - p1x) / Math.abs(p2y - p1y)),
-            b = Math.atan((p3x - p2x) / Math.abs(p2y - p3y));
-        a = p1y < p2y ? Math.PI - a : a;
-        b = p3y < p2y ? Math.PI - b : b;
-        var alpha = Math.PI / 2 - ((a + b) % (Math.PI * 2)) / 2,
-            dx1 = l1 * Math.sin(alpha + a),
-            dy1 = l1 * Math.cos(alpha + a),
-            dx2 = l2 * Math.sin(alpha + b),
-            dy2 = l2 * Math.cos(alpha + b);
-        return {
-            x1: p2x - dx1,
-            y1: p2y + dy1,
-            x2: p2x + dx2,
-            y2: p2y + dy2
-        };
-    }
     opts = opts || {};
-    if (!this.raphael.is(valuesx[0], "array")) {
-        valuesx = [valuesx];
-    }
-    if (!this.raphael.is(valuesy[0], "array")) {
-        valuesy = [valuesy];
-    }
     var gutter = opts.gutter || 10,
         len = Math.max(valuesx[0].length, valuesy[0].length),
         symbol = opts.symbol || "",
@@ -58,12 +14,17 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
         columns = null,
         dots = null,
         chart = this.set(),
-        path = [];
-
+        path = [],
+        shades = this.set();
+    if (!this.raphael.is(valuesx[0], "array")) {
+        valuesx = [valuesx];
+    }
+    if (!this.raphael.is(valuesy[0], "array")) {
+        valuesy = [valuesy];
+    }
     for (var i = 0, ii = valuesy.length; i < ii; i++) {
         len = Math.max(len, valuesy[i].length);
     }
-    var shades = this.set();
     for (i = 0, ii = valuesy.length; i < ii; i++) {
         if (opts.shade) {
             shades.push(this.path().attr({stroke: "none", fill: colors[i], opacity: opts.nostroke ? 1 : .3}));
@@ -89,8 +50,8 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
 
     var axis = this.set();
     if (opts.axis) {
-    	var lbls = opts.axislabels || [];
-    	var tags = opts.axistags || [];
+        var lbls = opts.axislabels || [];
+        var tags = opts.axistags || [];
         var ax = (opts.axis + "").split(/[,\s]+/);
         +ax[0] && axis.push(this.g.axis(x + gutter, y + gutter, width - 2 * gutter, minx, maxx, opts.axisxstep || Math.floor((width - 2 * gutter) / 20), 2, lbls[0], tags[0]));
         +ax[1] && axis.push(this.g.axis(x + width - gutter, y + height - gutter, height - 2 * gutter, miny, maxy, opts.axisystep || Math.floor((height - 2 * gutter) / 20), 3, lbls[1], tags[1]));
@@ -102,7 +63,7 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
         vertLine = this.set(),
         line;
     if (opts.vertLine){
-    	// TODO: Add vertical lines
+        // TODO: Add vertical lines
     }
     for (i = 0, ii = valuesy.length; i < ii; i++) {
         if (!opts.nostroke) {
@@ -145,6 +106,44 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
             shades[i].attr({path: path.concat(["L", X, y + height - gutter, "L",  x + gutter + ((valuesx[i] || valuesx[0])[0] - minx) * kx, y + height - gutter, "z"]).join(",")});
         }
         !opts.nostroke && line.attr({path: path.join(",")});
+    }
+    function shrink(values, dim) {
+        var k = values.length / dim,
+            j = 0,
+            l = k,
+            sum = 0,
+            res = [];
+        while (j < values.length) {
+            l--;
+            if (l < 0) {
+                sum += values[j] * (1 + l);
+                res.push(sum / k);
+                sum = values[j++] * -l;
+                l += k;
+            } else {
+                sum += values[j++];
+            }
+        }
+        return res;
+    }
+    function getAnchors(p1x, p1y, p2x, p2y, p3x, p3y) {
+        var l1 = (p2x - p1x) / 2,
+            l2 = (p3x - p2x) / 2,
+            a = Math.atan((p2x - p1x) / Math.abs(p2y - p1y)),
+            b = Math.atan((p3x - p2x) / Math.abs(p2y - p3y));
+        a = p1y < p2y ? Math.PI - a : a;
+        b = p3y < p2y ? Math.PI - b : b;
+        var alpha = Math.PI / 2 - ((a + b) % (Math.PI * 2)) / 2,
+            dx1 = l1 * Math.sin(alpha + a),
+            dy1 = l1 * Math.cos(alpha + a),
+            dx2 = l2 * Math.sin(alpha + b),
+            dy2 = l2 * Math.cos(alpha + b);
+        return {
+            x1: p2x - dx1,
+            y1: p2y + dy1,
+            x2: p2x + dx2,
+            y2: p2y + dy2
+        };
     }
     function createColumns(f) {
         // unite Xs together
@@ -209,27 +208,27 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
         !f && (dots = cvrs);
     }
     if (opts.legend){
-    	var X = x + width + width/10, Y = y + height/2, H = Y + 10;
-    	labels = opts.legend || [];
-    	dir = (opts.legendpos && opts.legendpos.toLowerCase && opts.legendpos.toLowerCase()) || "east";
-    	mark = this.g.markers[opts.legendmark && opts.legendmark.toLowerCase()] || "disc";
-    	chart.labels = this.set();
-    	for (var i = 0; i < lines.length; i++){
-    		var clr = lines[i].attr("stroke");
-    		chart.labels.push(this.set());
-    		chart.labels[i].push(this.g[mark](X+5, H, 5).attr({fill: clr, stroke:"none"}));
-    		chart.labels[i].push(txt = this.text(X+20, H, labels[i] || values[i]).attr(this.g.txtattr).attr({fill: opts.legendcolor || "#000", "text-anchor":"start"}));
-    		H += txt.getBBox().height * 1.2;
-    	}
-    	var bb = chart.labels.getBBox(),
-    	tr = {
-    		east: [0, -bb.height/2],
+        var X = x + width + 10, Y = y + height/2, H = Y + 10;
+        labels = opts.legend || [];
+        dir = (opts.legendpos && opts.legendpos.toLowerCase && opts.legendpos.toLowerCase()) || "east";
+        mark = this.g.markers[opts.legendmark && opts.legendmark.toLowerCase()] || "disc";
+        chart.labels = this.set();
+        for (var i = 0; i < lines.length; i++){
+            var clr = lines[i].attr("stroke");
+            chart.labels.push(this.set());
+            chart.labels[i].push(this.g[mark](X+5, H, 5).attr({fill: clr, stroke:"none"}));
+            chart.labels[i].push(txt = this.text(X+20, H, labels[i] || values[i]).attr(this.g.txtattr).attr({fill: opts.legendcolor || "#000", "text-anchor":"start"}));
+            H += txt.getBBox().height * 1.2;
+        }
+        var bb = chart.labels.getBBox(),
+        tr = {
+            east: [0, -bb.height/2],
             west: [-bb.width - 2 * width - 20, -bb.height / 2],
             north: [-width - bb.width / 2, -height - bb.height - 10],
             south: [-width - bb.width / 2, height + 10]
         }[dir];
-    	chart.labels.translate.apply(chart.labels, tr);
-    	chart.push(chart.labels);
+        chart.labels.translate.apply(chart.labels, tr);
+        chart.push(chart.labels);
     }
     chart.push(lines, shades, symbols, axis, columns, dots);
     chart.lines = lines;
@@ -241,7 +240,7 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
         columns.mouseover(fin).mouseout(fout);
         return this;
     };
-    
+
     chart.clickColumn = function (f) {
         !columns && createColumns();
         columns.click(f);
@@ -268,21 +267,21 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
         return this;
     };
     chart.hoverLabel = function (fin, fout) {
-    	var that = this;
-    	for (var i = 0; i < lines.length; i++){
-    		(function(line, j){
-    			var o = {
-    				line : line,
-    				label: that.labels && that.labels[j]
-    			};
-    			that.labels[j].mouseover(function(){
-    				fin.call(o);
-    			}).mouseout(function(){
-    				fout.call(o);
-    			});
-    		})(lines[i], i);
-    	}
-    	return this;
+        var that = this;
+        for (var i = 0; i < lines.length; i++){
+            (function(line, j){
+                var o = {
+                    line : line,
+                    label: that.labels && that.labels[j]
+                };
+                that.labels[j].mouseover(function(){
+                    fin.call(o);
+                }).mouseout(function(){
+                    fout.call(o);
+                });
+            })(lines[i], i);
+        }
+        return this;
     };
     chart.click = function (f) {
         !dots && createDots();
