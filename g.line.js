@@ -10,12 +10,14 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
         len = Math.max(valuesx[0].length, valuesy[0].length),
         symbol = opts.symbol || "",
         colors = opts.colors || Raphael.fn.g.colors,
+        labels = opts.legend || [],
         that = this,
         columns = null,
         dots = null,
         chart = this.set(),
         path = [],
-        shades = this.set();
+        shades = this.set(),
+        labelOrder = {};
     if (!this.raphael.is(valuesx[0], "array")) {
         valuesx = [valuesx];
     }
@@ -104,6 +106,9 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
         symbols.push(symset);
         if (opts.shade) {
             shades[i].attr({path: path.concat(["L", X, y + height - gutter, "L",  x + gutter + ((valuesx[i] || valuesx[0])[0] - minx) * kx, y + height - gutter, "z"]).join(",")});
+        }
+        if (opts.legend){
+            labelOrder[labels[i]] = i;
         }
         !opts.nostroke && line.attr({path: path.join(",")});
     }
@@ -209,7 +214,6 @@ Raphael.fn.g.linechart = function (x, y, width, height, valuesx, valuesy, opts) 
     }
     if (opts.legend){
         var X = x + width + 10, Y = y + height/2, H = Y + 10;
-        labels = opts.legend || [];
         dir = (opts.legendpos && opts.legendpos.toLowerCase && opts.legendpos.toLowerCase()) || "east";
         mark = this.g.markers[opts.legendmark && opts.legendmark.toLowerCase()] || "disc";
         chart.labels = this.set();

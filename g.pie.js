@@ -11,13 +11,17 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
         covers = this.set(),
         chart = this.set(),
         series = this.set(),
+        cx = cx,
+        cy = cy,
         order = [],
         len = values.length,
         angle = 0,
         total = 0,
         others = 0,
         cut = 9,
-        defcut = true;
+        defcut = true,
+        labelOrder = {},
+        origColorOrder = opts.origColorOrder || false;
     chart.covers = covers;
     if (len == 1) {
         series.push(this.circle(cx, cy, r).attr({fill: this.g.colors[0], stroke: opts.stroke || "#fff", "stroke-width": opts.strokewidth == null ? 1 : opts.strokewidth}));
@@ -42,7 +46,11 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
         for (var i = 0; i < len; i++) {
             total += values[i];
             values[i] = {value: values[i], order: i, valueOf: function () { return this.value; }};
+            if (opts.identifer){
+                labelOrder[opts.identifer[i]] = i;
+            }
         }
+        chart.labelOrder = labelOrder;
         values.sort(function (a, b) {
             return b.value - a.value;
         });
@@ -70,7 +78,7 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
                 var ipath = sector(cx, cy, 1, angle, angle - 360 * values[i] / total).join(",");
             }
             var path = sector(cx, cy, r, angle, angle -= 360 * values[i] / total);
-            var p = this.path(opts.init ? ipath : path).attr({fill: opts.colors && opts.colors[i] || this.g.colors[i] || "#666", stroke: opts.stroke || "#fff", "stroke-width": (opts.strokewidth == null ? 1 : opts.strokewidth), "stroke-linejoin": "round"});
+            var p = this.path(opts.init ? ipath : path).attr({fill: opts.colors && opts.colors[(origColorOrder ? values[i].order : i)] || this.g.colors[i] || "#666", stroke: opts.stroke || "#fff", "stroke-width": (opts.strokewidth == null ? 1 : opts.strokewidth), "stroke-linejoin": "round"});
             p.value = values[i];
             p.middle = path.middle;
             p.mangle = mangle;
@@ -105,15 +113,14 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
                     r: r,
                     value: values[j],
                     total: total,
-                    label: that.labels && that.labels[j],
-                    id: j
+                    label: that.labels && that.labels[j]
                 };
                 cover.mouseover(function () {
                     fin.call(o);
                 }).mouseout(function () {
                     fout.call(o);
                 });
-                if (labelOpt){
+                if (labelOpt && that.labels[j]){
                     that.labels[j].mouseover(function (){
                         fin.call(o);
                     }).mouseout(function () {

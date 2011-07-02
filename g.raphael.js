@@ -307,6 +307,40 @@
         }
         return this.path(path.join(",")).attr({stroke: color});
     };
+    Raphael.fn.g.masterLegend = function(x, y, labels, mark, opts){
+        var h = y + 10;
+        labels = labels || [];
+        colors = opts.colors || this.colors;
+        mark = this.g.markers[mark && mark.toLowerCase()] || "disc";
+        var res = this.set();
+        for (var i = 0; i < labels.length; i++){
+            res.push(this.set());
+            res[i].push(this.g[mark](x + 5, h, 5).attr({fill: colors[i], stroke: "none"}));
+            res[i].push(txt = this.text(x + 20, h, labels[i]).attr(this.g.txtattr).attr({fill: "#000", "text-anchor": "start"}));
+            h += txt.getBBox().height * 1.2;
+        }
+        res.hover = function(fin, fout, opts){
+            fout = fout || function() {};
+            opts = opts || {};
+            var that = this;
+            for (var i = 0; i < res.length; i++){
+                (function(label, j){
+                    var o = {
+                        order : i,
+                        label : label,
+                        text :  label[1].attrs["text"]
+                    };
+                    label.mouseover(function(){
+                        fin.call(o);
+                    }).mouseout(function(){
+                        fout.call(o);
+                    });
+                })(res[i], i);
+            }
+            return this;
+        }
+        return res;
+    };
     Raphael.fn.g.drop = function (x, y, text, size, angle) {
         size = size || 30;
         angle = angle || 0;
