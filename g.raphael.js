@@ -30,6 +30,27 @@
         arrow: "arrow",
         "->": "arrow"
     };
+    var tokenRegex = /\{([^\}]+)\}/g,
+    objNotationRegex = /(?:(?:^|\.)(.+?)(?=\[|\.|$|\()|\[('|")(.+?)\2\])(\(\))?/g; // matches .xxxxx or ["xxxxx"] to run over object properties
+    Raphael.fn.g.replacer = function (all, key, obj) {
+        var res = obj;
+        key.replace(objNotationRegex, function (all, name, quote, quotedName, isFunc) {
+            name = name || quotedName;
+            if (res) {
+                if (name in res) {
+                    res = res[name];
+                }
+                typeof res == "function" && isFunc && (res = res());
+            }
+        });
+        res = (res == null || res == obj ? all : res) + "";
+        return res;
+    };
+    Raphael.fn.g.fill = function (str, obj) {
+        return String(str).replace(tokenRegex, function (all, key) {
+            return Raphael.fn.g.replacer(all, key, obj);
+        });
+    };
     Raphael.fn.g.shim = {stroke: "none", fill: "#000", "fill-opacity": 0};
     Raphael.fn.g.txtattr = {font: "12px Arial, sans-serif"};
     Raphael.fn.g.colors = [];
@@ -225,6 +246,103 @@
         set.translate(xy.x - w - bb.x, xy.y - h - bb.y);
         return this.path(p).attr({fill: "#000", stroke: "none"}).insertBefore(set.node ? set : set[0]);
     };
+    Raphael.fn.g.setpopup = function (X, Y, set, pos, ret) {
+        pos = String(pos || "top-middle").split("-");
+        pos[1] = pos[1] || "middle";
+        var r = 5,
+            bb = set.getBBox(),
+            w = Math.round(bb.width),
+            h = Math.round(bb.height),
+            x = Math.round(bb.x) - r,
+            y = Math.round(bb.y) - r,
+            gap = Math.min(h / 2, w / 2, 10),
+            shapes = {
+                top: "M{x},{y}h{w4},{w4},{w4},{w4}a{r},{r},0,0,1,{r},{r}v{h4},{h4},{h4},{h4}a{r},{r},0,0,1,-{r},{r}l-{right},0-{gap},{gap}-{gap}-{gap}-{left},0a{r},{r},0,0,1-{r}-{r}v-{h4}-{h4}-{h4}-{h4}a{r},{r},0,0,1,{r}-{r}z",
+                bottom: "M{x},{y}l{left},0,{gap}-{gap},{gap},{gap},{right},0a{r},{r},0,0,1,{r},{r}v{h4},{h4},{h4},{h4}a{r},{r},0,0,1,-{r},{r}h-{w4}-{w4}-{w4}-{w4}a{r},{r},0,0,1-{r}-{r}v-{h4}-{h4}-{h4}-{h4}a{r},{r},0,0,1,{r}-{r}z",
+                right: "M{x},{y}h{w4},{w4},{w4},{w4}a{r},{r},0,0,1,{r},{r}v{h4},{h4},{h4},{h4}a{r},{r},0,0,1,-{r},{r}h-{w4}-{w4}-{w4}-{w4}a{r},{r},0,0,1-{r}-{r}l0-{bottom}-{gap}-{gap},{gap}-{gap},0-{top}a{r},{r},0,0,1,{r}-{r}z",
+                left: "M{x},{y}h{w4},{w4},{w4},{w4}a{r},{r},0,0,1,{r},{r}l0,{top},{gap},{gap}-{gap},{gap},0,{bottom}a{r},{r},0,0,1,-{r},{r}h-{w4}-{w4}-{w4}-{w4}a{r},{r},0,0,1-{r}-{r}v-{h4}-{h4}-{h4}-{h4}a{r},{r},0,0,1,{r}-{r}z"
+            },
+            offset = {
+                hx0: X - (x + r + w - gap * 2),
+                hx1: X - (x + r + w / 2 - gap),
+                hx2: X - (x + r + gap),
+                vhy: Y - (y + r + h + r + gap),
+                "^hy": Y - (y - gap)
+            },
+            mask = [{
+                x: x + r,
+                y: y,
+                w: w,
+                w4: w / 4,
+                h4: h / 4,
+                right: 0,
+                left: w - gap * 2,
+                bottom: 0,
+                top: h - gap * 2,
+                r: r,
+                h: h,
+                gap: gap
+            }, {
+                x: x + r,
+                y: y,
+                w: w,
+                w4: w / 4,
+                h4: h / 4,
+                left: w / 2 - gap,
+                right: w / 2 - gap,
+                top: h / 2 - gap,
+                bottom: h / 2 - gap,
+                r: r,
+                h: h,
+                gap: gap
+            }, {
+                x: x + r,
+                y: y,
+                w: w,
+                w4: w / 4,
+                h4: h / 4,
+                left: 0,
+                right: w - gap * 2,
+                top: 0,
+                bottom: h - gap * 2,
+                r: r,
+                h: h,
+                gap: gap
+            }][pos[1] == "middle" ? 1 : (pos[1] == "top" || pos[1] == "left") * 2];
+            var dx = 0,
+                dy = 0,
+                out = this.path(Raphael.fn.g.fill(shapes[pos[0]], mask)).insertBefore(set);
+            switch (pos[0]) {
+                case "top":
+                    dx = X - (x + r + mask.left + gap);
+                    dy = Y - (y + r + h + r + gap);
+                break;
+                case "bottom":
+                    dx = X - (x + r + mask.left + gap);
+                    dy = Y - (y - gap);
+                break;
+                case "left":
+                    dx = X - (x + r + w + r + gap);
+                    dy = Y - (y + r + mask.top + gap);
+                break;
+                case "right":
+                    dx = X - (x - gap);
+                    dy = Y - (y + r + mask.top + gap);
+                break;
+            }
+            out.translate(dx, dy);
+            if (ret) {
+                ret = out.attr("path");
+                out.remove();
+                return {
+                    path: ret,
+                    dx: dx,
+                    dy: dy
+                };
+            }
+            set.translate(dx, dy);
+            return out;
+    };
     Raphael.fn.g.popup = function (x, y, text, dir, size) {
         dir = dir == null ? 2 : dir > 3 ? 3 : dir;
         size = size || 5;
@@ -311,6 +429,7 @@
         var h = y + 10;
         labels = labels || [];
         colors = opts.colors || this.colors;
+        tagline = opts.tagline || [];
         mark = this.g.markers[mark && mark.toLowerCase()] || "disc";
         var res = this.set();
         for (var i = 0; i < labels.length; i++){
@@ -318,6 +437,10 @@
             res[i].push(this.g[mark](x + 5, h, 5).attr({fill: colors[i], stroke: "none"}));
             res[i].push(txt = this.text(x + 20, h, labels[i]).attr(this.g.txtattr).attr({fill: "#000", "text-anchor": "start"}));
             h += txt.getBBox().height * 1.2;
+            if (tagline[i]){
+                res[i].push(tag = this.text(x + 20, h, tagline[i]).attr(this.g.txtattr).attr({fill: "#000", "text-anchor" : "start"}));
+                h += tag.getBBox().height * 1.3;
+            }
         }
         res.hover = function(fin, fout, opts){
             fout = fout || function() {};
