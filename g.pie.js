@@ -46,9 +46,6 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
         for (var i = 0; i < len; i++) {
             total += values[i];
             values[i] = {value: values[i], order: i, valueOf: function () { return this.value; }};
-            if (opts.identifer){
-                labelOrder[opts.identifer[i]] = i;
-            }
         }
         chart.labelOrder = labelOrder;
         values.sort(function (a, b) {
@@ -84,6 +81,9 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
             p.mangle = mangle;
             sectors.push(p);
             series.push(p);
+            if (opts.identifer){
+                labelOrder[opts.identifer[values[i].order]] = i;
+            }
             opts.init && p.animate({path: path.join(",")}, (+opts.init - 1) || 1000, ">");
         }
         for (i = 0; i < len; i++) {
